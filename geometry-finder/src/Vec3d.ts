@@ -42,4 +42,8 @@ export class Vec3d {
         return out;
     }
 
+    rotate(axis: Vec3d, angle: number): Vec3d {
+        //TODO
+        return null;
+    }
 }
