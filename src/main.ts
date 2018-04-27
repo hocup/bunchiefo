@@ -1,4 +1,4 @@
-import {Dipole} from "./Dipole";
+import { Dipole } from "./Dipole";
 import { Vec3d } from "./Vec3d";
 
 console.log("HELLO WORLD");
