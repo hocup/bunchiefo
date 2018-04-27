@@ -32,5 +32,25 @@ describe("Vec3d", function() {
             assert.notEqual(v1.magnitude, v2.magnitude);
             assert.notEqual(v1.x, v2.x);
         });
+
+    });
+
+    describe("#dot()", function () {
+        let v1 = new Vec3d(1);
+        let v2 = new Vec3d(2);
+        it("should commute", function() {
+            let dotProd1 = v1.dot(v2);
+            let dotProd2 = v2.dot(v1);
+            assert.equal(dotProd1, dotProd2);
+        });
+
+        it("should be (close to) zero for perpendicular vectors", function () {
+            let a = Math.random()*Math.PI * 2;
+            let v1 = new Vec3d(Math.cos(a), Math.sin(a));
+            let v2 = new Vec3d(Math.cos(Math.PI/2 + a), Math.sin(Math.PI/2 + a));
+
+            
+            assert.ok(Math.abs(v1.dot(v2)) < 0.0000000001);
+        });
     });
 });
