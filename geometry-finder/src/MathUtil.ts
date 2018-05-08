@@ -4,9 +4,9 @@ export class MathUtil {
 
     static FUZZ: number = 0.000000001
 
-    static X_HAT: Vec3d = new Vec3d(1, 0, 0);
-    static Y_HAT: Vec3d = new Vec3d(0, 1, 0);
-    static Z_HAT: Vec3d = new Vec3d(0, 0, 1);
+    static get X_HAT(): Vec3d { return new Vec3d(1, 0, 0); }
+    static get Y_HAT(): Vec3d { return new Vec3d(0, 1, 0); }
+    static get Z_HAT(): Vec3d { return new Vec3d(0, 0, 1); }
 
     static randomVec3d(): Vec3d {
         return new Vec3d(Math.random(), Math.random(), Math.random());

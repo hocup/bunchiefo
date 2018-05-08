@@ -93,7 +93,7 @@ describe("Vec3d", function() {
             assert.throws(v1.normalized);
         });
 
-        it("does not throw an error when the vectro is small, but larger than optional fuzz", function() {
+        it("does not throw an error when the vector is small, but larger than optional fuzz", function() {
             let v1 = new Vec3d(MathUtil.FUZZ, 0,0).scale(0.9);
             assert.doesNotThrow(function() {return v1.normalized(MathUtil.FUZZ/2);},)
         });

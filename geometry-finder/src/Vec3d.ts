@@ -1,3 +1,6 @@
+import { isNullOrUndefined } from "util";
+import { MathUtil } from "./MathUtil";
+
 export class Vec3d {
     get magnitude(): number {
         return Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2) + Math.pow(this.z,2));
@@ -43,8 +46,15 @@ export class Vec3d {
     }
 
     normalized(fuzz?: number): Vec3d {
-        //TODO
-        return null;
+        if(isNullOrUndefined(fuzz)) {
+            fuzz = MathUtil.FUZZ;
+        }
+
+        if(this.magnitude < fuzz) {
+            throw("Error normalizing a vector that is too small")
+        } else {
+            return this.scale(1/this.magnitude);
+        }
     }
 
     rotate(axis: Vec3d, angle: number): Vec3d {
