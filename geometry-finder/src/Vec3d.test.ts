@@ -79,13 +79,48 @@ describe("Vec3d", function() {
         });
     });
 
-    describe.only("#rotate(axis: Vec3d, a: number)", function() {
+    describe("#normalized(fuzz?: number)", function() {
+        it("returns a vector with a magnitude of 1, pointing in the direction of the original", function (){
+            let v1 = new Vec3d(23,45,3);
+            let n = v1.normalized();
+
+            assert.ok(MathUtil.fuzzyEquals(n.magnitude, 1));
+            assert.ok(MathUtil.fuzzyEquals(v1.dot(n), v1.magnitude));
+        });
+
+        it("throws an error if the vector is too small", function() {
+            let v1 = new Vec3d(MathUtil.FUZZ, 0, 0).scale(0.9);
+            assert.throws(v1.normalized);
+        });
+
+        it("does not throw an error when the vectro is small, but larger than optional fuzz", function() {
+            let v1 = new Vec3d(MathUtil.FUZZ, 0,0).scale(0.9);
+            assert.doesNotThrow(function() {return v1.normalized(MathUtil.FUZZ/2);},)
+        });
+    });
+
+    describe("#rotate(axis: Vec3d, a: number)", function() {
         it("does not change the magnitude of the vector", function() {
             let v1 = new Vec3d(1,0,0);
             let rotated = v1.rotate(MathUtil.Y_HAT, Math.PI/2);
 
             assert.ok(MathUtil.fuzzyEquals(rotated.magnitude, 1));
+        });
 
+        it("does not depend on the magnitude of the axis vector", function () {
+            let v1 = new Vec3d(1,0,0);
+            let a1 = new Vec3d(1,1,1);
+            let a2 = new Vec3d(4,4,4);
+
+            assert.ok(MathUtil.vecFuzzyEquals(v1.rotate(a1, Math.PI/5), v1.rotate(a2, Math.PI/5)))
+        });
+
+        it("correctly handles rotating around a vector", function () {
+            let v1 = new Vec3d(1,0,0);
+            let v_axis = new Vec3d(1,1,1);
+
+            let rotated = v1.rotate(v_axis, 2*Math.PI/3);
+            assert.ok(MathUtil.vecFuzzyEquals(new Vec3d(0,1,0), rotated));
         });
     });
 });

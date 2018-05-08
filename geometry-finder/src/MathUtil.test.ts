@@ -42,5 +42,16 @@ describe("MathUtil", function() {
             assert.ok(MathUtil.fuzzyEquals(0,56,100));
             assert.ok(!MathUtil.fuzzyEquals(-50,56,100));
         });
+
+    });
+
+    describe("#vecFuzzyEquals()", function() {
+        it("should compare vectors correctly with default fuzz", function() {
+            throw("todo");
+        });
+
+        it("should compare vectors correctly with custom fuzz", function() {
+            throw("todo");
+        });
     });
 });

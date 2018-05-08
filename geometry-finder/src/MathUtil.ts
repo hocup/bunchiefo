@@ -19,4 +19,12 @@ export class MathUtil {
 
         return Math.abs(a - b) <= fuzz;
     }
+
+    static vecFuzzyEquals(a: Vec3d, b: Vec3d, fuzz?: number) {
+        if(!fuzz) {
+            fuzz = MathUtil.FUZZ;
+        }
+
+        return a.add(b.scale(-1)).magnitude <= fuzz;
+    }
 }

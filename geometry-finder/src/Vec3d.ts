@@ -42,6 +42,11 @@ export class Vec3d {
         return out;
     }
 
+    normalized(fuzz?: number): Vec3d {
+        //TODO
+        return null;
+    }
+
     rotate(axis: Vec3d, angle: number): Vec3d {
         //TODO
         return null;
