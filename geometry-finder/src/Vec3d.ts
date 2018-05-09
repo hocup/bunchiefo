@@ -58,7 +58,21 @@ export class Vec3d {
     }
 
     rotate(axis: Vec3d, angle: number): Vec3d {
-        //TODO
-        return null;
+        // Thanks wikipedia!
+        // https://en.wikipedia.org/wiki/Rotation_matrix
+        let n = axis.normalized();
+        let x = 
+                this.x*(Math.cos(angle)  + Math.pow(n.x, 2)*(1 - Math.cos(angle)))
+                + this.y*(n.x*n.y*(1 - Math.cos(angle)) - n.z*Math.sin(angle))
+                + this.z*(n.x*n.z*(1 - Math.cos(angle)) + n.y*Math.sin(angle));
+        let y = 
+                this.x*(n.x*n.y*(1 - Math.cos(angle)) + n.z*Math.sin(angle))
+                + this.y*(Math.cos(angle) + n.y*n.y*(1 - Math.cos(angle)))
+                + this.z*(n.y*n.z*(1 - Math.cos(angle)) - n.x*Math.sin(angle));
+        let z = 
+                this.x*(n.z*n.x*(1 - Math.cos(angle)) - n.y*Math.sin(angle))
+                + this.y*(n.z*n.y*(1 - Math.cos(angle)) + n.x*Math.sin(angle))
+                + this.z*(Math.cos(angle) + n.z*n.z*(1 - Math.cos(angle)));
+        return new Vec3d(x, y, z);
     }
 }

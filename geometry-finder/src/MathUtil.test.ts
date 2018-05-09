@@ -47,11 +47,16 @@ describe("MathUtil", function() {
 
     describe("#vecFuzzyEquals()", function() {
         it("should compare vectors correctly with default fuzz", function() {
-            throw("todo");
+            let v1 = new Vec3d(23*Math.random(),45*Math.random(),3*Math.random());
+            let v2 = new Vec3d(v1.x + MathUtil.FUZZ*0.9, v1.y, v1.z);
+            assert.ok(MathUtil.vecFuzzyEquals(v1,v2));
         });
 
         it("should compare vectors correctly with custom fuzz", function() {
-            throw("todo");
+            let v1 = new Vec3d(1,1,1);
+            let v2 = new Vec3d(-1,-1,-1);
+            assert.ok(!MathUtil.vecFuzzyEquals(v1, v2));
+            assert.ok(MathUtil.vecFuzzyEquals(v1,v2,12));
         });
     });
 });
