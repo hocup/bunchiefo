@@ -27,4 +27,28 @@ export class MathUtil {
 
         return a.add(b.scale(-1)).magnitude <= fuzz;
     }
+
+    // A helper function that will constrain a passed in value to be an angle between 0 and 2*Pi
+    // or, optionally, between -Pi and +Pi
+    static angleWrapAround(v: number, posOnly: boolean = true): number {
+        let out = v;
+        let max = posOnly ? Math.PI*2 : Math.PI;
+        let min = posOnly ? 0         : -Math.PI;        
+
+        while(out > max) {
+            out -= Math.PI*2;
+        }
+
+        while(out < min) {
+            out += Math.PI*2;
+        }
+        return out;
+    }
+
+    // A helper function that will pick an index, with the probablity of picking any valid index in the array
+    // proportional to the value at that index.
+    static selectIndex(array: number[]): number {
+        // TODO: Tim Gunn: make it work
+        return -1;
+    }
 }

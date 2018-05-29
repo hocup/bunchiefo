@@ -122,7 +122,7 @@ describe("SimulatedAnnealingManager", function() {
             let prob: number = Math.random();
             let testMngr = new SimulatedAnnealingManager<TestStateImplementation>(
                 new TestStateImplementation(500,2234),
-                10000,
+                40000,
                 null,
                 (e1, e2, temp) => {return prob;}
             );
@@ -155,6 +155,5 @@ describe("SimulatedAnnealingManager", function() {
 
         assert.ok(Math.abs(testMngr.state.x) < initState.x);
         assert.ok(Math.abs(testMngr.state.y) < initState.y);
-
     });
 });
