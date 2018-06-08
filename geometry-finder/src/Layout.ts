@@ -3,6 +3,9 @@ import { Sensor } from "./Sensor";
 import { isNull, isNullOrUndefined } from "util";
 import { MathUtil } from "./MathUtil";
 import { Vec3d } from "./Vec3d";
+import { SixAxisState } from "./SixAxisState";
+import { World } from "./World";
+import { Dipole } from "./Dipole";
 
 /*
  * This class serves as the "state" that is being optimized by the Simulated Annealing process.
@@ -38,7 +41,8 @@ export class Layout implements IState{
 
         numMagnetometers = isNullOrUndefined(numMagnetometers) ? Math.floor(1 + 4*Math.random()) : numMagnetometers;
         for(let i = 0; i < numMagnetometers; i++) {
-            let newMagnetometer = new Sensor(1,1,0,MathUtil.randomVec3d(),new Vec3d(0,0,1));
+            let newMagnetometer = new Sensor(1,1,0,new Vec3d(Math.random(), Math.random(), 0),new Vec3d(0,0,1));
+            newMagnetometer.position.z = 0;
             this.magnetometers.push(newMagnetometer);
         }
         
@@ -55,6 +59,8 @@ export class Layout implements IState{
                     // Move a magnet
                     let magnetIndex = Math.floor(l.magnets.length*Math.random());
                     l.magnets[magnetIndex].angle = MathUtil.angleWrapAround(l.magnets[magnetIndex].angle + MathUtil.boxMullerGaussian()[0]);
+
+                    // TODO: Make sure no magnets are overlapping
                 }
             },
             {
@@ -69,16 +75,22 @@ export class Layout implements IState{
                 prob: 10,
                 mod: (l: Layout) => {
                     // Move a magnetometer
-                    //TODO: constrain this!
                     let index = Math.floor(l.magnetometers.length*Math.random());
                     let move = MathUtil.boxMullerGaussian();
                     l.magnetometers[index].position = l.magnetometers[index].position.add(new Vec3d(move[0], move[1], 0));
+                    while(l.magnetometers[index].position.magnitude > 1.5) {
+                        l.magnetometers[index].position = l.magnetometers[index].position.scale(0.5);
+                    }
+
+                    // TODO: make sure no magnetometers are overlapping
                 }
             },
             {
                 prob: 0,
                 mod: (l: Layout) => {
                     // flip a magnetometer
+
+                    // This is pretty pointless, isn't it?
                 }
             }
         ];
@@ -90,10 +102,41 @@ export class Layout implements IState{
     }
 
     energy(): number {
+        let maxOffset = 1;
+        let offsetStepSize = maxOffset*2 / 5;
 
         // ENERGY
+        // Set up a set of positions for the
+        let readings: {readings:number[], controllerState: SixAxisState}[] = [];
+        for(let x = -maxOffset; x < maxOffset; x += offsetStepSize) {
+            for(let y = -maxOffset; y < maxOffset; y += offsetStepSize) {
+                for(let z = -maxOffset; z < maxOffset; z += offsetStepSize) {
+                    // TODO: Rotations!
 
-        return 0;
+                    let controllerState = new SixAxisState(new Vec3d(x,y,z), 0, 0, 0);
+                    readings.push(
+                        {
+                            readings: this.getReadings(controllerState),
+                            controllerState: controllerState
+                        }
+                    );
+                }
+            }
+        }
+
+        let e: number = 0;
+        for(let i = 0; i < readings.length; i++) {
+            for(let j = i+1; j < readings.length; j++) {
+                let sumSqrs = 0;
+                for(let k = 0; k < readings[i].readings.length; k++) {
+                    sumSqrs += Math.pow(readings[i].readings[k] - readings[j].readings[k], 2)
+                }
+
+                e += 1/(0.05 + Math.sqrt(sumSqrs));
+            }
+        }
+
+        return e;
     }
 
     clone(): Layout {
@@ -109,5 +152,34 @@ export class Layout implements IState{
         //TODO: Actually clone the things
 
         return clone;
+    }
+
+    getReadings(controller: SixAxisState): number[] {
+        let out = Array<number>(this.magnetometers.length);
+
+        let world = new World();
+        this.magnets.map(
+            (magnet) => {
+                let magnetDipole = new Dipole();
+                magnetDipole.position = new Vec3d(this.ringRadius*Math.cos(magnet.angle), this.ringRadius*Math.sin(magnet.angle), 0);
+                magnetDipole.normal = new Vec3d(0,0,magnet.up ? 1 : -1);
+
+                // Handle rotations
+                // TODO
+
+                // Handle translations
+                magnetDipole.position = magnetDipole.position.add(controller.position);
+
+                world.dipoles.push(magnetDipole);
+            }
+        )
+
+        for(let i = 0; i < this.magnetometers.length; i++) {
+            //TODO: get this magnetometer's reading
+            let fieldAtMagnetometer = world.getFieldAt(this.magnetometers[i].position);
+            out[i] = fieldAtMagnetometer.dot(this.magnetometers[i].orientation);
+        }
+
+        return out;
     }
 }
