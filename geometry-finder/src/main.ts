@@ -5,7 +5,7 @@ import { Layout } from "./Layout";
 
 let numSteps = 30000;
 
-let startState = new Layout(5, 6, 3);
+let startState = new Layout(5, 5, 4);
 let mySAManager = new SimulatedAnnealingManager(startState, numSteps);
 
 for(let i = 0; i < numSteps; i++) {

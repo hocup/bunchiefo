@@ -102,24 +102,33 @@ export class Layout implements IState{
     }
 
     energy(): number {
+        let numSteps = 4;
+
+        let maxAngle = 5 * Math.PI/180; // 10 degrees between maximums
+        let angleStepSize = maxAngle*2 / numSteps;
+
         let maxOffset = 1;
-        let offsetStepSize = maxOffset*2 / 5;
+        let offsetStepSize = maxOffset*2 / numSteps;
 
         // ENERGY
         // Set up a set of positions for the
         let readings: {readings:number[], controllerState: SixAxisState}[] = [];
-        for(let x = -maxOffset; x < maxOffset; x += offsetStepSize) {
-            for(let y = -maxOffset; y < maxOffset; y += offsetStepSize) {
-                for(let z = -maxOffset; z < maxOffset; z += offsetStepSize) {
-                    // TODO: Rotations!
-
-                    let controllerState = new SixAxisState(new Vec3d(x,y,z), 0, 0, 0);
-                    readings.push(
-                        {
-                            readings: this.getReadings(controllerState),
-                            controllerState: controllerState
+        for(let x = -maxOffset; x <= maxOffset; x += offsetStepSize) {
+            for(let y = -maxOffset; y <= maxOffset; y += offsetStepSize) {
+                for(let z = -maxOffset; z <= maxOffset; z += offsetStepSize) {
+                    for(let r = -maxAngle; r <= maxAngle; r += angleStepSize) {
+                        for(let p = -maxAngle; p <= maxAngle; p += angleStepSize) {
+                            for(let yaw = -maxAngle; yaw <= maxAngle; yaw += angleStepSize) {
+                                let controllerState = new SixAxisState(new Vec3d(x,y,z), r, p, yaw);
+                                readings.push(
+                                    {
+                                        readings: this.getReadings(controllerState),
+                                        controllerState: controllerState
+                                    }
+                                );
+                            }
                         }
-                    );
+                    }                    
                 }
             }
         }
@@ -148,8 +157,6 @@ export class Layout implements IState{
         );
         
         clone.magnetometers = this.magnetometers.map(sensor => sensor.clone());
-        
-        //TODO: Actually clone the things
 
         return clone;
     }
@@ -162,7 +169,7 @@ export class Layout implements IState{
             (magnet) => {
                 let magnetDipole = new Dipole();
                 magnetDipole.position = new Vec3d(this.ringRadius*Math.cos(magnet.angle), this.ringRadius*Math.sin(magnet.angle), 0);
-                magnetDipole.normal = new Vec3d(0,0,magnet.up ? 1 : -1);
+                magnetDipole.normal = new Vec3d(0, 0, magnet.up ? 1 : -1);
 
                 // Handle rotations
                 // TODO
@@ -175,7 +182,6 @@ export class Layout implements IState{
         )
 
         for(let i = 0; i < this.magnetometers.length; i++) {
-            //TODO: get this magnetometer's reading
             let fieldAtMagnetometer = world.getFieldAt(this.magnetometers[i].position);
             out[i] = fieldAtMagnetometer.dot(this.magnetometers[i].orientation);
         }
