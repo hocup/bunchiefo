@@ -1,9 +1,17 @@
 import { Dipole } from "./Dipole";
 import { Vec3d } from "./Vec3d";
+import { SimulatedAnnealingManager } from "./SA/SimulatedAnnealingManager";
+import { Layout } from "./Layout";
 
-console.log("HELLO WORLD");
+let numSteps = 1000;
 
-let myDipole = new Dipole();
-console.log(myDipole.getFieldAt(new Vec3d(0,4,0)));
+let startState = new Layout(5, 6, 3);
+let mySAManager = new SimulatedAnnealingManager(startState, numSteps);
+
+for(let i = 0; i < numSteps; i++) {
+    mySAManager.step();
+    console.log(mySAManager.state.magnets[0]);
+}
+
 
 

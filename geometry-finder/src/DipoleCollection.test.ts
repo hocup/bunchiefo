@@ -28,10 +28,10 @@ describe("DipoleCollection", function() {
             assert.ok(!MathUtil.vecFuzzyEquals(posRef, dc.position));
         });
 
-        it("can be set", function() {
-            dc.position = newPos;
-            assert.ok(MathUtil.vecFuzzyEquals(newPos, dc.position));
-        });
+        // it("can be set", function() {
+        //     dc.position = newPos;
+        //     assert.ok(MathUtil.vecFuzzyEquals(newPos, dc.position));
+        // });
 
         it("is not set by reference", function() {
             newPos.x += 2;

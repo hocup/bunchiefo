@@ -54,7 +54,7 @@ export class Layout implements IState{
                 mod: (l: Layout) => {
                     // Move a magnet
                     let magnetIndex = Math.floor(l.magnets.length*Math.random());
-                    l.magnets[magnetIndex].angle += MathUtil.angleWrapAround(Math.random() - 0.5);
+                    l.magnets[magnetIndex].angle = MathUtil.angleWrapAround(l.magnets[magnetIndex].angle + MathUtil.boxMullerGaussian()[0]);
                 }
             },
             {
@@ -68,33 +68,31 @@ export class Layout implements IState{
             {
                 prob: 10,
                 mod: (l: Layout) => {
-
+                    // Move a magnetometer
+                    //TODO: constrain this!
+                    let index = Math.floor(l.magnetometers.length*Math.random());
+                    let move = MathUtil.boxMullerGaussian();
+                    l.magnetometers[index].position = l.magnetometers[index].position.add(new Vec3d(move[0], move[1], 0));
+                }
+            },
+            {
+                prob: 0,
+                mod: (l: Layout) => {
+                    // flip a magnetometer
                 }
             }
         ];
-        // let junk = [
-        //     10,      // move a magnet DONE
-        //     10,      // move a magnetometer
-        //     10,     // flip a magnet
-        //     1,      // add a magnet
-        //     1,      // remove a magnet
-        //     1,      // add a magnetometer
-        //     1,      // remove a magnetometer
-        // ];
 
-
-        // normalize
-        let probsSum = modProbs.reduce((acc, v) => acc + v.prob, 0);
-        if(probsSum != 0) {
-            modProbs.map(v => {v.prob /= probsSum;});
-        } else {
-            throw("Probability sum is zero!")
-        }
+        // Does this really need to be a one-liner?
+        modProbs[MathUtil.selectIndex(modProbs.map(mods => mods.prob))].mod(neighbor);
 
         return neighbor;
     }
 
     energy(): number {
+
+        // ENERGY
+
         return 0;
     }
 

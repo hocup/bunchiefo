@@ -48,7 +48,40 @@ export class MathUtil {
     // A helper function that will pick an index, with the probablity of picking any valid index in the array
     // proportional to the value at that index.
     static selectIndex(array: number[]): number {
-        // TODO: Tim Gunn: make it work
-        return -1;
+        let arraySum: number = 0;
+        let hasNegative: boolean = false;
+        for(let i = 0; i < array.length; i++){
+            arraySum += array[i];
+            if(array[i] < 0) {
+                hasNegative = true;
+                break;
+            }
+        }
+
+        if(array.length == 0 || arraySum == 0 || hasNegative) {
+            return -1;
+        } else {
+            let randval: number = Math.random()*arraySum;
+            let index = 0;
+            let indexSum = array[0];
+            while(randval > indexSum) {
+                index++;
+                indexSum += array[index];
+            }
+
+            return index;
+        }
+    }
+
+    static boxMullerGaussian() : [number, number] {
+        let out: [number, number] = [0,0];
+
+        let u1 = Math.random();
+        let u2 = Math.random();
+
+        out[0] = Math.sqrt(-2*Math.log(u1)) * Math.cos(2*Math.PI*u2);
+        out[1] = Math.sqrt(-2*Math.log(u1)) * Math.sin(2*Math.PI*u2);
+
+        return out;
     }
 }

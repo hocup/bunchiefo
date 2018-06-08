@@ -7,7 +7,7 @@ import { Vec3d } from './Vec3d';
 import { MathUtil } from './MathUtil';
 
 
-describe.only("Layout", function() {
+describe("Layout", function() {
     let testLayout = new Layout();
 
     it("has magnetometer positions", function() {

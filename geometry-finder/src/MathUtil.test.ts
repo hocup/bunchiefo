@@ -59,4 +59,60 @@ describe("MathUtil", function() {
             assert.ok(MathUtil.vecFuzzyEquals(v1,v2,12));
         });
     });
+
+    describe("#angleWrapAround()", function() {
+        // TODO: more tests?
+        it("should wrap angles greater than 2Pi around (when pos only)", function () {
+            let testAngle = Math.PI*(2 + 0.3);
+            console.log(MathUtil.angleWrapAround(testAngle, true));
+            assert.ok(MathUtil.fuzzyEquals(MathUtil.angleWrapAround(testAngle, true), 0.3 * Math.PI));
+        });
+    });
+
+    describe("#selectIndex()", function() {
+        it("should return -1 for an empty array", function () {
+            let testArr: number[] = [];
+            assert.equal(MathUtil.selectIndex(testArr), -1);
+        });
+
+        it("should return -1 for an array that sums to 0", function () {
+            let testArr: number[] = [0,0,0,0,0];
+            assert.equal(MathUtil.selectIndex(testArr), -1);
+        });
+
+        it("should return -1 for an array with any negative values", function () {
+            let testArr: number[] = [1,1,1,10,-30];
+            assert.equal(MathUtil.selectIndex(testArr), -1);
+        });
+
+        it("should return 0 for an array with only one element", function () {
+            let testArr: number[] = [1];
+            for(let i = 0; i < 100; i++) {
+                assert.equal(MathUtil.selectIndex(testArr), 0);
+            }
+        });
+
+        it("should return an index in proportion to its value", function () {
+            let testArr: number[] = [9000, 1000];
+            let resultArr: number[] = [0,0];
+
+            for(let i = 0; i < 10000; i++){
+                resultArr[MathUtil.selectIndex(testArr)] ++;
+            }
+
+            assert.ok(MathUtil.fuzzyEquals(testArr[0], resultArr[0], 100));
+            assert.ok(MathUtil.fuzzyEquals(testArr[1], resultArr[1], 100));
+        });
+
+        it("should never return an index with a 0", function () {
+            let testArr: number[] = [1,1,1,0,1];
+        
+            for(let i = 0; i < 1000; i ++) {
+                assert.ok(MathUtil.selectIndex(testArr) != 3);
+            }
+        });
+    });
+
+
+
 });
