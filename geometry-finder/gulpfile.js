@@ -48,11 +48,11 @@ function watch() {
 }
 
 let clean = deleteBuild;
-let build = compileTs;
+// let build = compileTs;
 let test = gulp.series(compileTests, runTests);
 
 
 exports.clean = clean;
-exports.build = build;
+// exports.build = build;
 exports.test = test;
 exports.watch = watch;

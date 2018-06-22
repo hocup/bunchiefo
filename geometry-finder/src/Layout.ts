@@ -22,9 +22,15 @@ import { Dipole } from "./Dipole";
  */
 export class Layout implements IState{
 
+    magnetSize: number = 0.25;
+    magnetometerSize: number = 0.25;
+    centerPlatformSize: number = 3;
+
     magnets: { angle: number, up: boolean }[] = [];
     magnetometers: Sensor[] = [];
     ringRadius: number = 5; // In cm
+
+    readings: {readings:number[], controllerState: SixAxisState}[]
 
     constructor(ringRadius?: number, numMagnets?: number, numMagnetometers?: number) {
 
@@ -56,11 +62,31 @@ export class Layout implements IState{
             {
                 prob: 10, 
                 mod: (l: Layout) => {
+                    let overlap = (): boolean => {
+                        // TODO: Only check the magnet that is being used. This way, I can still walk it away from other magnets without getting locked by other magnets
+                        return l.magnets.reduce(
+                            (acc, m, index) => { 
+                                let out = false;
+                                let ownPos = [this.ringRadius*Math.cos(m.angle), this.ringRadius*Math.sin(m.angle)];
+                                for(let i = index+1; i < l.magnets.length; i++) {
+                                    let otherPos = [this.ringRadius*Math.cos(l.magnets[i].angle), this.ringRadius*Math.sin(l.magnets[i].angle)];
+
+                                    let dist = Math.sqrt(Math.pow(ownPos[0] - otherPos[0], 2) + Math.pow(ownPos[1] - otherPos[1], 2));
+                                    if(dist < this.magnetSize*2) {
+                                        out = true;
+                                    }
+                                }
+                                return out || acc;
+                            }, 
+                            false
+                        );
+                    }
+
                     // Move a magnet
                     let magnetIndex = Math.floor(l.magnets.length*Math.random());
-                    l.magnets[magnetIndex].angle = MathUtil.angleWrapAround(l.magnets[magnetIndex].angle + MathUtil.boxMullerGaussian()[0]);
-
-                    // TODO: Make sure no magnets are overlapping
+                    do { 
+                        l.magnets[magnetIndex].angle = MathUtil.angleWrapAround(l.magnets[magnetIndex].angle + MathUtil.boxMullerGaussian()[0]);
+                    } while(overlap());
                 }
             },
             {
@@ -74,11 +100,26 @@ export class Layout implements IState{
             {
                 prob: 10,
                 mod: (l: Layout) => {
+                    // TODO: Only check the magnet that is being used. This way, I can still walk it away from other magnets without getting locked by other magnets
+                    const overlap = (testMagntmtr: Sensor): boolean => {
+                        return l.magnetometers.reduce(
+                            (acc, mtmr) => {
+                                if(mtmr == testMagntmtr)
+                                    return acc;
+                                
+                                let dist = testMagntmtr.position.add(mtmr.position.scale(-1)).magnitude;
+                                return dist < this.magnetometerSize || acc;
+                            }, false
+                        )
+                    }
+
                     // Move a magnetometer
                     let index = Math.floor(l.magnetometers.length*Math.random());
                     let move = MathUtil.boxMullerGaussian();
-                    l.magnetometers[index].position = l.magnetometers[index].position.add(new Vec3d(move[0], move[1], 0));
-                    while(l.magnetometers[index].position.magnitude > 1.5) {
+                    do {
+                        l.magnetometers[index].position = l.magnetometers[index].position.add(new Vec3d(move[0], move[1], 0));
+                    } while (overlap(l.magnetometers[index]));
+                    while(l.magnetometers[index].position.magnitude > this.centerPlatformSize) {
                         l.magnetometers[index].position = l.magnetometers[index].position.scale(0.5);
                     }
 
@@ -111,34 +152,56 @@ export class Layout implements IState{
         let offsetStepSize = maxOffset*2 / numSteps;
 
         // ENERGY
-        // Set up a set of positions for the
-        let readings: {readings:number[], controllerState: SixAxisState}[] = [];
-        for(let x = -maxOffset; x <= maxOffset; x += offsetStepSize) {
-            for(let y = -maxOffset; y <= maxOffset; y += offsetStepSize) {
-                for(let z = -maxOffset; z <= maxOffset; z += offsetStepSize) {
-                    for(let r = -maxAngle; r <= maxAngle; r += angleStepSize) {
-                        for(let p = -maxAngle; p <= maxAngle; p += angleStepSize) {
-                            for(let yaw = -maxAngle; yaw <= maxAngle; yaw += angleStepSize) {
-                                let controllerState = new SixAxisState(new Vec3d(x,y,z), r, p, yaw);
-                                readings.push(
-                                    {
-                                        readings: this.getReadings(controllerState),
-                                        controllerState: controllerState
-                                    }
-                                );
-                            }
+        // Set up a set of positions for the ring to go through
+        let x: number = 0;
+        let y: number = 0;
+        let z: number = 0;
+        let r: number = 0;
+        let p: number = 0;
+        let yaw: number = 0;
+
+        this.readings = [];
+        // for(x = -maxOffset; x <= maxOffset; x += offsetStepSize) {
+        //     for(y = -maxOffset; y <= maxOffset; y += offsetStepSize) {
+        //         for(z = -maxOffset; z <= maxOffset; z += offsetStepSize) {
+        //             for(r = -maxAngle; r <= maxAngle; r += angleStepSize) {
+        //                 for(p = -maxAngle; p <= maxAngle; p += angleStepSize) {
+        //                     for(yaw = -maxAngle; yaw <= maxAngle; yaw += angleStepSize) {
+        //                         let controllerState = new SixAxisState(new Vec3d(x,y,z), r, p, yaw);
+        //                         readings.push(
+        //                             {
+        //                                 readings: this.getReadings(controllerState),
+        //                                 controllerState: controllerState
+        //                             }
+        //                         );
+        //                     }
+        //                 }
+        //             }                    
+        //         }
+        //     }
+        // }
+
+        // Simpler, 3-axis thingy
+        for(x = -maxOffset; x <= maxOffset; x += offsetStepSize) {
+            for(y = -maxOffset; y <= maxOffset; y += offsetStepSize) {
+                for(yaw = -maxAngle; yaw <= maxAngle; yaw += angleStepSize) {
+                    let controllerState = new SixAxisState(new Vec3d(x,y,z), r, p, yaw);
+                    this.readings.push(
+                        {
+                            readings: this.getReadings(controllerState),
+                            controllerState: controllerState
                         }
-                    }                    
+                    );
                 }
             }
         }
 
         let e: number = 0;
-        for(let i = 0; i < readings.length; i++) {
-            for(let j = i+1; j < readings.length; j++) {
+        for(let i = 0; i < this.readings.length; i++) {
+            for(let j = i+1; j < this.readings.length; j++) {
                 let sumSqrs = 0;
-                for(let k = 0; k < readings[i].readings.length; k++) {
-                    sumSqrs += Math.pow(readings[i].readings[k] - readings[j].readings[k], 2)
+                for(let k = 0; k < this.readings[i].readings.length; k++) {
+                    sumSqrs += Math.pow(this.readings[i].readings[k] - this.readings[j].readings[k], 2)
                 }
 
                 e += 1/(0.05 + Math.sqrt(sumSqrs));
@@ -173,6 +236,22 @@ export class Layout implements IState{
 
                 // Handle rotations
                 // TODO
+                // Apply the rotations in the order they appear in the parameters
+                let rollAxis = new Vec3d(1, 0, 0);
+                let pitchAxis = new Vec3d(0, 1, 0);
+                let yawAxis = new Vec3d(0, 0, 1);
+
+                // Roll
+                pitchAxis = pitchAxis.rotate(rollAxis, controller.roll);
+                yawAxis = yawAxis.rotate(rollAxis, controller.roll);
+                magnetDipole.position = magnetDipole.position.rotate(rollAxis, controller.roll);
+
+                // Pitch
+                yawAxis = yawAxis.rotate(pitchAxis, controller.pitch);
+                magnetDipole.position = magnetDipole.position.rotate(pitchAxis, controller.pitch);
+
+                // Yaw
+                magnetDipole.position = magnetDipole.position.rotate(yawAxis, controller.yaw)
 
                 // Handle translations
                 magnetDipole.position = magnetDipole.position.add(controller.position);
